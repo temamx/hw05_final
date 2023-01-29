@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
-from posts.models import Post, Group, User
+from posts.models import Post, Group, User, Follow
 from django.urls import reverse
 from django.core.cache import cache
 
@@ -13,7 +13,7 @@ class PostPagesTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user_author = User.objects.create_user(username='StasBasov')
-
+        cls.user = User.objects.create_user(username='Guest')
         cls.group = Group.objects.create(
             title='Заголовок',
             slug='slug',
@@ -25,12 +25,28 @@ class PostPagesTests(TestCase):
                 author=cls.user_author,
                 group=cls.group,
             )
+        cls.follow = Follow.objects.create(
+            user=cls.user,
+            author=cls.user_author,
+        )
 
     def setUp(self):
+        cache.clear()
+        self.guest_client = Client()
+        self.user = User.objects.create_user(username='NoName')
         self.authorized_client = Client()
-        self.authorized_client.force_login(self.user_author)
+        self.authorized_client.force_login(self.user)
         self.author_client = Client()
         self.author_client.force_login(self.user_author)
+        self.new_user = User.objects.create_user(username='FollowUser')
+        self.new_user_client = Client()
+        self.new_user_client.force_login(self.new_user)
+        self.new_user_client.post(
+            reverse(
+                'posts:profile_follow',
+                kwargs={'username': 'FollowUser'}
+            )
+        )
 
     def test_pages_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон"""
@@ -61,7 +77,8 @@ class PostPagesTests(TestCase):
         }
         for page, args in pages_names.items():
             with self.subTest(page=page):
-                response = self.author_client.get(reverse(page, kwargs=args))
+                response = self.authorized_client.get(
+                    reverse(page, kwargs=args))
                 self.assertEqual(len(response.context['page_obj']), 10)
 
     def test_post_appers_on_pages_with_group(self):
@@ -73,13 +90,11 @@ class PostPagesTests(TestCase):
             reverse('posts:group_list', kwargs={'slug': 'slug'}),
             reverse('posts:profile', kwargs={'username': self.user_author}),
         )
-
         self.post = Post.objects.create(
             text='Пост 1',
             author=self.user_author,
             group=self.group,
         )
-
         for page in pages_names:
             with self.subTest(page=page):
                 response = self.authorized_client.get(page)
@@ -97,7 +112,7 @@ class PostPagesTests(TestCase):
         response = self.author_client.get(reverse('posts:index'))
         posts = response.content
         Post.objects.create(
-            text='Тестовый пост 1',
+            text='Пост 1',
             author=self.user_author,
         )
         response_old = self.author_client.get(reverse('posts:index'))

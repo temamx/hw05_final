@@ -26,14 +26,14 @@ class PostModelTest(TestCase):
             text="Короткий пост",
         )
         cls.comment = Comment.objects.create(
-            author=cls.user_author,
+            author=cls.user,
             text='Тестовый комментарий',
         )
 
     def setUp(self):
         cache.clear()
         self.authorized_client = Client()
-        self.authorized_client.force_login(self.user_author)
+        self.authorized_client.force_login(self.user)
 
     def test_model_post_have_correct_object_name(self):
         post = PostModelTest.post
