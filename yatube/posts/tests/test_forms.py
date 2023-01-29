@@ -94,7 +94,7 @@ class PostFormTests(TestCase):
         self.assertEqual(Post.objects.count(), posts_count)
         self.assertEqual(edit_post.text, 'Изменённый текст поста',)
         self.assertEqual(edit_post.author, self.user_author)
-    
+
     def test_comment_posts_only_authorized_client(self):
         """Проверяем, что комментировать посты может
         только авторизованный пользователь

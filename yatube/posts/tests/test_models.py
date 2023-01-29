@@ -29,7 +29,7 @@ class PostModelTest(TestCase):
             author=cls.user_author,
             text='Тестовый комментарий',
         )
-    
+
     def setUp(self):
         cache.clear()
         self.authorized_client = Client()
