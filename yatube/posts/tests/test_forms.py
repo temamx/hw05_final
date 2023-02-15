@@ -7,6 +7,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.conf import settings
 import tempfile
 from django.core.cache import cache
+from yatube.posts.tests.shortcuts import group_create
+from yatube.posts.views import post_create
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
@@ -16,24 +18,16 @@ class PostFormTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user_author = User.objects.create_user(username='NoNameUser')
-        cls.group = Group.objects.create(
-            title='Группа',
-            slug='slug',
-            description='Описание',
-        )
-
-        cls.post = Post.objects.create(
-            author=cls.user_author,
-            text='Пост',
-            group=cls.group,
-        )
-
+        cls.author = User.objects.create_user(username='author')
+        cls.user = User.objects.create_user(username='reader')
+        cls.group = group_create('Группа', 'Описание')
+        cls.post = post_create('Пост', cls.user, cls.group)
         cls.form = PostForm
 
     def setUp(self):
         self.authorized_client = Client()
-        self.authorized_client.force_login(self.user_author)
+        self.authorized_client.force_login(self.author)
+        cache.clear()
 
     def test_create_post(self):
         """Проверка создаётся ли новая запись в базе данных"""
@@ -78,7 +72,7 @@ class PostFormTests(TestCase):
         posts_count = Post.objects.count()
         form_data = {
             'text': 'Изменённый текст поста',
-            'author': self.user_author,
+            'author': self.author,
             'group': self.group.id,
         }
         response = self.authorized_client.post(
@@ -93,7 +87,7 @@ class PostFormTests(TestCase):
         edit_post = Post.objects.all().last()
         self.assertEqual(Post.objects.count(), posts_count)
         self.assertEqual(edit_post.text, 'Изменённый текст поста',)
-        self.assertEqual(edit_post.author, self.user_author)
+        self.assertEqual(edit_post.author, self.author)
 
     def test_comment_posts_only_authorized_client(self):
         """Проверяем, что комментировать посты может
@@ -110,7 +104,7 @@ class PostFormTests(TestCase):
         комментарий появляется на странице поста
         """
         form_data = {
-            'author': self.user_author,
+            'author': self.author,
             'text': 'Текст комментария',
         }
         response = self.authorized_client.get(
@@ -140,7 +134,7 @@ class PostFormTests(TestCase):
         form_data = {
             'text': 'Тестовый пост',
             'group': self.group,
-            'author': self.user_author,
+            'author': self.author,
             'image': uploaded
         }
         response = self.authorized_client.get(

@@ -3,6 +3,8 @@ from django.test import TestCase, Client
 from posts.models import Post, Group, User
 from http import HTTPStatus
 
+from yatube.posts.tests.shortcuts import group_create, post_create
+
 
 User = get_user_model()
 
@@ -11,23 +13,12 @@ class PostURLTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user_author = User.objects.create_user(username='NoNameUser')
-        cls.group = Group.objects.create(
-            title='Название',
-            slug='slug',
-            description='Описание',
-        )
-        cls.post = Post.objects.create(
-            author=cls.user_author,
-            text='Пост',
-            group=cls.group,
-        )
+        cls.author = User.objects.create_user(username='author')
+        cls.user = User.objects.create_user(username='reader')
+        cls.group = group_create('Группа', 'Описание')
+        cls.post = post_create('Пост', cls.user, cls.group)
+        cls.post = post_create('Пост 2', cls.user, cls.group)
 
-        cls.post = Post.objects.create(
-            author=cls.user_author,
-            text='Пост 2',
-            group=cls.group,
-        )
 
         cls.templates = [
             '/',
@@ -39,7 +30,7 @@ class PostURLTest(TestCase):
         cls.templates_address = {
             '/': 'posts/index.html',
             f'/group/{cls.group.slug}/': 'posts/group_list.html',
-            f'/profile/{cls.user_author.username}/': 'posts/profile.html',
+            f'/profile/{cls.author.username}/': 'posts/profile.html',
             f'/posts/{cls.post.id}/': 'posts/post_detail.html',
             f'/posts/{cls.post.id}/edit/': 'posts/create_post.html',
             '/create/': 'posts/create_post.html',

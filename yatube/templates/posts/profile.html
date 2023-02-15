@@ -6,6 +6,7 @@
       <div class="mb-5">
         <h1>Все посты пользователя {{ author.get_full_name }}</h1>
         <h3>Всего постов: {{ author.posts.count }} </h3>
+        <h3>Подписчиков: {{ author.following.count }}</h3>
         {% if request.user != author %}
           {% if following %}
             <a

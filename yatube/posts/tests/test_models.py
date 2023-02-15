@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.core.cache import cache
 
+from yatube.posts.tests.shortcuts import group_create, post_create
+
 from ..models import Group, Post, Comment
 
 User = get_user_model()
@@ -12,19 +14,9 @@ class PostModelTest(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user = User.objects.create_user(username='auth')
-        cls.group = Group.objects.create(
-            title='Группа',
-            slug='Слаг',
-            description='Описание',
-        )
-        cls.long_post = Post.objects.create(
-            author=cls.user,
-            text="Не более 15 символов может уместиться в превью"
-        )
-        cls.post = Post.objects.create(
-            author=cls.user,
-            text="Короткий пост",
-        )
+        cls.group = group_create('Группа', 'Описание')
+        cls.long_post = post_create('Не более 15 символов может уместиться в превью', cls.user, cls.group)
+        cls._post = post_create('Короткий пост', cls.user, cls.group)
         cls.comment = Comment.objects.create(
             author=cls.user,
             text='Тестовый комментарий',
@@ -34,6 +26,7 @@ class PostModelTest(TestCase):
         cache.clear()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
+        cache.clear()
 
     def test_model_post_have_correct_object_name(self):
         post = PostModelTest.post
@@ -42,7 +35,7 @@ class PostModelTest(TestCase):
         expected_long_post = long_post.text
         self.assertEqual(
             str(expected_long_post),
-            "Не более 15 символов может уместиться в превью"
+            "Не более 15 сим"
         )
         self.assertEqual(str(expected_post), "Короткий пост")
 
