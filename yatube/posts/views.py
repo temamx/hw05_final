@@ -7,7 +7,8 @@ from django.conf import settings
 
 
 def index(request):
-    post_list = Post.objects.all().select_related('author').order_by('-pub_date')
+    post_list = Post.objects.all().select_related('author').order_by(
+        '-pub_date')
     paginator = Paginator(post_list, settings.POSTS_MAX)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)

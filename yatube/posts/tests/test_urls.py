@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
-from posts.models import Post, Group, User
+from posts.models import User
 from http import HTTPStatus
 
 from posts.tests.shortcuts import group_create, post_create
@@ -14,9 +14,11 @@ class PostURLTest(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user_author = User.objects.create_user(username='NoNameUser')
-        # Пытался заменить cls.user_author = User.objects.create_user(username='NoNameUser') на
-        # cls.user = User.objects.create_user('reader') 
-        # cls.author = User.objects.create_user('author')  --- всё ломается и не оживает
+        # Пытался заменить cls.user_author = User.objects.
+        # create_user(username='NoNameUser') на
+        # cls.user = User.objects.create_user('reader')
+        # cls.author = User.objects.create_user('author')
+        #   --- всё ломается и не оживает
         cls.group = group_create('Группа', 'Описание')
         cls.post = post_create('Пост', cls.user_author, cls.group)
         cls.post = post_create('Пост 2', cls.user_author, cls.group)

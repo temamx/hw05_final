@@ -2,7 +2,7 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from http import HTTPStatus
 from posts.forms import PostForm
-from posts.models import Post, Group, User
+from posts.models import Post, User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.conf import settings
 import tempfile

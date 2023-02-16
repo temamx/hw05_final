@@ -2,7 +2,7 @@ import tempfile
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase, Client, override_settings
-from posts.models import Post, Group, User, Follow
+from posts.models import Post, User, Follow
 from django.urls import reverse
 from django.core.cache import cache
 from posts.tests.shortcuts import group_create, post_create
@@ -143,7 +143,11 @@ class PostPagesTests(TestCase):
         может удалять их из подписок других пользователей
         """
         for i in range(self.TEST_AMOUNT_POST):
-            self.post = post_create('test_post_№' + str(i), self.user, self.group)
+            self.post = post_create(
+                'test_post_№' + str(i),
+                self.user,
+                self.group
+            )
         follow_count_before = Follow.objects.count()
         self.authorized_client.get(reverse(
             'posts:profile_unfollow', kwargs={'username': self.user.username}))
