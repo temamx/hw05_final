@@ -17,7 +17,7 @@ class PostModelTest(TestCase):
         cls.group = group_create('Группа', 'Описание')
         cls.long_post = post_create(
             'Не более 15 символов может уместиться в превью',
-            cls.user, 
+            cls.user,
             cls.group
         )
         cls.post = post_create('Короткий пост', cls.user, cls.group)
