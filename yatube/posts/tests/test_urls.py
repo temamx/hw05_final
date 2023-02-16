@@ -3,7 +3,7 @@ from django.test import TestCase, Client
 from posts.models import Post, Group, User
 from http import HTTPStatus
 
-from yatube.posts.tests.shortcuts import group_create, post_create
+from posts.tests.shortcuts import group_create, post_create
 
 
 User = get_user_model()
@@ -13,12 +13,13 @@ class PostURLTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.author = User.objects.create_user(username='author')
-        cls.user = User.objects.create_user(username='reader')
+        cls.user_author = User.objects.create_user(username='NoNameUser')
+        # Пытался заменить cls.user_author = User.objects.create_user(username='NoNameUser') на
+        # cls.user = User.objects.create_user('reader') 
+        # cls.author = User.objects.create_user('author')  --- всё ломается и не оживает
         cls.group = group_create('Группа', 'Описание')
-        cls.post = post_create('Пост', cls.user, cls.group)
-        cls.post = post_create('Пост 2', cls.user, cls.group)
-
+        cls.post = post_create('Пост', cls.user_author, cls.group)
+        cls.post = post_create('Пост 2', cls.user_author, cls.group)
 
         cls.templates = [
             '/',
@@ -30,7 +31,7 @@ class PostURLTest(TestCase):
         cls.templates_address = {
             '/': 'posts/index.html',
             f'/group/{cls.group.slug}/': 'posts/group_list.html',
-            f'/profile/{cls.author.username}/': 'posts/profile.html',
+            f'/profile/{cls.user_author.username}/': 'posts/profile.html',
             f'/posts/{cls.post.id}/': 'posts/post_detail.html',
             f'/posts/{cls.post.id}/edit/': 'posts/create_post.html',
             '/create/': 'posts/create_post.html',

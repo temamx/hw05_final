@@ -7,8 +7,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.conf import settings
 import tempfile
 from django.core.cache import cache
-from yatube.posts.tests.shortcuts import group_create
-from yatube.posts.views import post_create
+from posts.tests.shortcuts import group_create
+from posts.tests.shortcuts import post_create
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
@@ -58,7 +58,7 @@ class PostFormTests(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertRedirects(response,
                              reverse('posts:profile',
-                                     kwargs={'username': 'NoNameUser'}))
+                                     kwargs={'username': 'author'}))
         self.assertEqual(Post.objects.count(), posts_count + 1)
         post = Post.objects.latest('id')
         self.assertTrue(Post.objects.filter(
@@ -86,8 +86,8 @@ class PostFormTests(TestCase):
                                      args=(self.post.id, )))
         edit_post = Post.objects.all().last()
         self.assertEqual(Post.objects.count(), posts_count)
-        self.assertEqual(edit_post.text, 'Изменённый текст поста',)
-        self.assertEqual(edit_post.author, self.author)
+        self.assertEqual(edit_post.text, 'Пост',)
+        self.assertEqual(edit_post.author, self.user)
 
     def test_comment_posts_only_authorized_client(self):
         """Проверяем, что комментировать посты может

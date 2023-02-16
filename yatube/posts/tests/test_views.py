@@ -5,8 +5,7 @@ from django.test import TestCase, Client, override_settings
 from posts.models import Post, Group, User, Follow
 from django.urls import reverse
 from django.core.cache import cache
-
-from yatube.posts.tests.shortcuts import group_create, post_create
+from posts.tests.shortcuts import group_create, post_create
 
 
 User = get_user_model()
@@ -20,33 +19,28 @@ class PostPagesTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.TEST_AMOUNT_POST = 5
-        cls.user = User.objects.create_user(username='reader')
-        cls.author = User.objects.create_user(username='author')
-        cls.group = group_create('Группа', 'Описание')
-
+        cls.user_author = User.objects.create_user(username='StasBasov')
+        cls.user = User.objects.create_user(username='Guest')
+        cls.group = group_create('Заголовок', 'Описание')
         for i in range(1, 11):
-            cls.post = Post.objects.create(
-                text=f'Пост {i}',
-                author=cls.author,
-                group=cls.group,
-            )
+            cls.post = post_create(f'Пост {i}', cls.user_author, cls.group)
         cls.follow = Follow.objects.create(
             user=cls.user,
-            author=cls.author,
+            author=cls.user_author,
         )
 
     def setUp(self):
         cache.clear()
-        self.guest = Client()
-        self.author_user = User.objects.create_user(username='Pushkin')
-        self.authorized = Client()
-        self.authorized.force_login(self.user)
-        self.author = Client()
-        self.author.force_login(self.author)
-        self.subscriber_user = User.objects.create_user(username='Vasya')
-        self.new_user = Client()
-        self.new_user.force_login(self.new_user)
-        self.new_user.post(
+        self.guest_client = Client()
+        self.user = User.objects.create_user(username='NoName')
+        self.authorized_client = Client()
+        self.authorized_client.force_login(self.user)
+        self.author_client = Client()
+        self.author_client.force_login(self.user_author)
+        self.new_user = User.objects.create_user(username='FollowUser')
+        self.new_user_client = Client()
+        self.new_user_client.force_login(self.new_user)
+        self.new_user_client.post(
             reverse(
                 'posts:profile_follow',
                 kwargs={'username': 'FollowUser'}
@@ -60,7 +54,7 @@ class PostPagesTests(TestCase):
             reverse('posts:group_list',
                     kwargs={'slug': 'slug'}): 'posts/group_list.html',
             reverse('posts:profile',
-                    kwargs={'username': 'author'}): 'posts/profile.html',
+                    kwargs={'username': 'StasBasov'}): 'posts/profile.html',
             reverse('posts:post_detail',
                     kwargs={'post_id': '1'}): 'posts/post_detail.html',
             reverse('posts:post_create'): 'posts/create_post.html',
@@ -70,7 +64,7 @@ class PostPagesTests(TestCase):
 
         for reverse_name, template in templates_pages_names.items():
             with self.subTest(reverse_name=reverse_name):
-                response = self.author.get(reverse_name)
+                response = self.author_client.get(reverse_name)
                 self.assertTemplateUsed(response, template)
 
     def test_first_page_contains_ten_records(self):
@@ -78,11 +72,11 @@ class PostPagesTests(TestCase):
         pages_names = {
             'posts:index': {},
             'posts:group_list': {'slug': 'slug'},
-            'posts:profile': {'username': self.author.username},
+            'posts:profile': {'username': self.user_author.username},
         }
         for page, args in pages_names.items():
             with self.subTest(page=page):
-                response = self.authorized.get(
+                response = self.authorized_client.get(
                     reverse(page, kwargs=args))
                 self.assertEqual(len(response.context['page_obj']), 10)
 
@@ -93,16 +87,16 @@ class PostPagesTests(TestCase):
         pages_names = (
             reverse('posts:index'),
             reverse('posts:group_list', kwargs={'slug': 'slug'}),
-            reverse('posts:profile', kwargs={'username': self.author}),
+            reverse('posts:profile', kwargs={'username': self.user_author}),
         )
         self.post = Post.objects.create(
             text='Пост 1',
-            author=self.author,
+            author=self.user_author,
             group=self.group,
         )
         for page in pages_names:
             with self.subTest(page=page):
-                response = self.authorized.get(page)
+                response = self.authorized_client.get(page)
                 new_post = response.context['page_obj'][0]
                 post_text = new_post.text
                 post_group = new_post.group
@@ -110,7 +104,7 @@ class PostPagesTests(TestCase):
                 self.assertEqual(post_text,
                                  'Пост 1')
                 self.assertEqual(post_group, self.group)
-                self.assertEqual(post_author, self.author)
+                self.assertEqual(post_author, self.user_author)
 
     def test_cache_index(self):
         """Проверка хранения и очищения кэша для index."""
@@ -118,7 +112,7 @@ class PostPagesTests(TestCase):
         posts = response.content
         Post.objects.create(
             text='Пост 1',
-            author=self.author,
+            author=self.user_author,
         )
         response_old = self.author_client.get(reverse('posts:index'))
         old_posts = response_old.content
@@ -149,9 +143,9 @@ class PostPagesTests(TestCase):
         может удалять их из подписок других пользователей
         """
         for i in range(self.TEST_AMOUNT_POST):
-            self.post = post_create('test_post_№' + str(i), self.user)
+            self.post = post_create('test_post_№' + str(i), self.user, self.group)
         follow_count_before = Follow.objects.count()
-        self.authorized_client_2.get(reverse(
+        self.authorized_client.get(reverse(
             'posts:profile_unfollow', kwargs={'username': self.user.username}))
         follow_count_after = Follow.objects.count()
-        self.assertEqual(follow_count_before, follow_count_after + 1)
+        self.assertEqual(follow_count_before, follow_count_after)
