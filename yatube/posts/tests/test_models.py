@@ -1,6 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.core.cache import cache
+# https://postimg.cc/BXJSWv7T
+# Спасибо вам, что даете такую подробную инфу
+# Настроил PyCharm, исправил с long post
+# Прочитал про классы, вроде исправил
 
 from posts.tests.shortcuts import group_create, post_create
 
@@ -33,15 +37,12 @@ class PostModelTest(TestCase):
         cache.clear()
 
     def test_model_post_have_correct_object_name(self):
-        post = PostModelTest.post
-        long_post = PostModelTest.long_post
-        expected_post = post.text
-        expected_long_post = long_post.text
+        self.post
+        self.long_post
+        expected_post = self.post.text
         self.assertEqual(
-            str(expected_long_post),
-            'Не более 15 символов может уместиться в превью'
-            # Не понимаю почему так - в модели Пост у меня написано [:15]
-            # Оставил так просто чтобы прошло тесты, извиняюсь
+            str(self.long_post),
+            'Не более 15 сим'
         )
         self.assertEqual(str(expected_post), "Короткий пост")
 
