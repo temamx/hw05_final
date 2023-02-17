@@ -19,12 +19,6 @@ class PostModelTest(TestCase):
         super().setUpClass()
         cls.user = User.objects.create_user(username='auth')
         cls.group = group_create('Группа', 'Описание')
-        cls.long_post = post_create(
-            'Не более 15 символов может уместиться в превью',
-            cls.user,
-            cls.group
-        )
-        cls.post = post_create('Короткий пост', cls.user, cls.group)
         cls.comment = Comment.objects.create(
             author=cls.user,
             text='Тестовый комментарий',
@@ -37,14 +31,17 @@ class PostModelTest(TestCase):
         cache.clear()
 
     def test_model_post_have_correct_object_name(self):
-        self.post
-        self.long_post
-        expected_post = self.post.text
+        post = post_create('Короткий пост', self.user, self.group)
+        long_post = post_create(
+            'Не более 15 символов может уместиться в превью',
+            self.user,
+            self.group
+        )
         self.assertEqual(
-            str(self.long_post),
+            str(long_post),
             'Не более 15 сим'
         )
-        self.assertEqual(str(expected_post), "Короткий пост")
+        self.assertEqual(str(post), "Короткий пост")
 
     def test_model_group_have_correct_object_name(self):
         group_str = Group.objects.get(pk=1)
