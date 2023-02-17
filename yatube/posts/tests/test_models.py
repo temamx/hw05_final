@@ -1,10 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.core.cache import cache
-# https://postimg.cc/BXJSWv7T
-# Спасибо вам, что даете такую подробную инфу
-# Настроил PyCharm, исправил с long post
-# Прочитал про классы, вроде исправил
+# Хочу начать 7 спринт, но понравилось
+# это всё фиксить, я лучше понимать начал
 
 from posts.tests.shortcuts import group_create, post_create
 
